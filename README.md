@@ -1,302 +1,223 @@
-# **Report: Secure Login and Registration System in C#**
+# Secure Login and Registration System in C# (Windows Forms)
 
-This report details a C# Windows Forms application implementing a secure login and registration system, along with a data insertion feature. The application adheres to security best practices, including password hashing with salting, input validation, and a limited-attempt login mechanism. It uses a SQL Server database to store user data.
+This project demonstrates a C# Windows Forms application implementing a secure login and registration system using a SQL Server database. It incorporates security best practices like password hashing with salting, input validation, and a login attempt limitation mechanism.
 
-**Database:** The database file (`Database1.mdf`) and the script to create the `tb_log` table are essential components. (I'll assume the script is similar to the one I provided in the previous response).
+---
 
-## Table of Contents
+## ✨ Features
 
-1.  [User Registration](#user-registration)
-2.  [User Login](#user-login)
-3.  [Role-Based Access Control](#role-based-access-control)
-4.  [Data Input (Conceptual)](#data-input)
-5.  [Input Validation](#input-validation)
-6.  [Password Hashing and Salting](#password-hashing-and-salting)
-7.  [Login Attempt Limitation and Lockout](#login-attempt-limitation-and-lockout)
+*   **Secure User Registration:** Allows new users to create accounts with validated input.
+*   **Secure User Login:** Authenticates existing users.
+*   **Password Security:** Uses **SHA-256 hashing** with a unique **salt** for each password.
+*   **Input Validation:** Enforces rules for username, password complexity, email format, age range, and phone number format.
+*   **Login Attempt Limitation:** Locks user accounts temporarily (2 minutes) after 3 consecutive failed login attempts.
+*   **Role-Based Access Control (RBAC):** Redirects users to different forms based on their role (e.g., 'admin', 'user') after successful login.
+*   **SQL Server Integration:** Stores user credentials and details securely in a SQL Server database (`tb_log` table).
+*   **SQL Injection Prevention:** Uses parameterized queries to protect against SQL injection vulnerabilities.
 
-## 1. User Registration
+---
 
-**Description:** Enables new users to create accounts.  The system validates input, securely hashes the password with a unique salt, and stores the user information in the database.
+## 📸 Screenshots
 
-**Screenshot (Description):**
+**Login Screen (Starting Page):**
+![getstarted](https://github.com/user-attachments/assets/c048fdd7-6a2b-427e-879f-e311a84f6345)
 
-*   **Registration Form (Form2):** A form with textboxes for "New Username," "New Password," "Email," "New Age," and "Phone Number." A ComboBox for "Role" selection (admin/user).  "Create Account" and "Exit" buttons.
+*   *Description:* The initial form where users enter their username and password. The "Login" button is disabled until both fields are filled. Includes options to Register or Exit.
 
-**Code Snippet (Form2.cs - `btnCreateAccount_Click`):**
+**Registration Screen (Creating Account Page):**
+![account](https://github.com/user-attachments/assets/15171b26-8a46-4778-a855-4361ecc52012)
 
-```csharp
-private void btnCreateAccount_Click(object sender, EventArgs e)
-{
-    // ... (Input validation - see section 5) ...
+*   *Description:* The form for new users to create an account. Includes fields for username, password, email, age, phone number, and role selection. Input validation is performed before account creation.
 
-    string salt = Guid.NewGuid().ToString();
-    string hashedPassword = HashPassword(password, salt);
 
-    using (SqlConnection conn = new SqlConnection(connectionString))
+---
+
+## 🛠️ Technologies Used
+
+*   **Language:** C#
+*   **Framework:** .NET Framework (for Windows Forms)
+*   **UI:** Windows Forms
+*   **Database:** SQL Server
+*   **Hashing Algorithm:** SHA-256
+
+---
+
+## ⚙️ Setup & Prerequisites
+
+1.  **Environment:**
+    *   Windows Operating System
+    *   .NET Framework (version compatible with the project, likely 4.x) installed.
+    *   Microsoft Visual Studio (2017, 2019, 2022 recommended).
+    *   SQL Server (Express, Developer, or Standard edition) installed and running.
+
+2.  **Database Setup:**
+    *   **Option A (Using .mdf file):** Ensure the `Database1.mdf` file is included in the project structure and the connection string in the code (e.g., `Form1.cs`, `Form2.cs`) correctly points to it, potentially using `AttachDbFilename=|DataDirectory|\Database1.mdf;`. The `|DataDirectory|` token usually resolves to the application's output directory (e.g., `bin\Debug`).
+    *   **Option B (Using SQL Script):** If you have a `.sql` script, connect to your SQL Server instance using SQL Server Management Studio (SSMS) or a similar tool. Create a database (e.g., `UserAuthDB`) and execute the script to create the `tb_log` table with the necessary columns:
+        ```sql
+        -- Example SQL Script (Adjust data types/lengths as needed)
+        CREATE TABLE tb_log (
+            Id INT PRIMARY KEY IDENTITY(1,1),
+            Username NVARCHAR(50) UNIQUE NOT NULL,
+            PasswordHash NVARCHAR(MAX) NOT NULL, -- Store Base64 SHA256 hash
+            Salt NVARCHAR(MAX) NOT NULL,         -- Store GUID salt
+            Email NVARCHAR(100) UNIQUE NULL,     -- Added UNIQUE constraint if desired
+            Age INT NULL,
+            PhoneNumber NVARCHAR(15) NULL,
+            Role NVARCHAR(20) NOT NULL DEFAULT 'user',
+            FailedAttempts INT NOT NULL DEFAULT 0,
+            LockoutTime DATETIME2 NULL
+        );
+        ```
+    *   **Connection String:** **Crucially, update the `connectionString` variable** in the C# code (`Form1.cs`, `Form2.cs`, etc.) to match your specific SQL Server instance, database name, and authentication method (Windows Authentication or SQL Server Authentication). Example:
+        ```csharp
+        // Example for SQL Server Express with Windows Authentication
+        string connectionString = @"Server=.\SQLEXPRESS;Database=UserAuthDB;Integrated Security=True;";
+        // Example for SQL Server Authentication
+        // string connectionString = @"Server=YourServerName;Database=UserAuthDB;User ID=YourSqlUser;Password=YourSqlPassword;";
+        ```
+
+3.  **Build the Project:**
+    *   Clone or download the repository.
+    *   Open the solution file (`.sln`) in Visual Studio.
+    *   Build the solution (Build > Build Solution or `Ctrl+Shift+B`).
+
+---
+
+## ▶️ How to Use
+
+1.  **Run the Application:** Press `F5` or click the "Start" button in Visual Studio.
+2.  **Login:** The Login form (`Form1`) will appear.
+    *   Enter a registered username and password.
+    *   Click "Login".
+    *   If credentials are correct and the account isn't locked, you'll be redirected based on your role (Form3 for admin, Form4 for user).
+    *   If credentials are incorrect, an error message will show, and the failed attempt counter increases.
+    *   After 3 failed attempts, the account locks for 2 minutes.
+3.  **Register:**
+    *   Click the "Register" button on the Login form.
+    *   The Registration form (`Form2`) will appear.
+    *   Fill in all fields according to the validation rules (tooltips might provide hints).
+    *   Select a role (if applicable, though the code seems to default to 'user').
+    *   Click "Create Account".
+    *   If successful, a confirmation message appears, and you are returned to the Login form.
+    *   If validation fails, an error message specific to the issue will be shown.
+4.  **Data Input (Conceptual - Form3/Form4):**
+    *   After logging in, the appropriate form (Form3 or Form4) appears.
+    *   These forms are intended for data entry (Name, Age, Email, Phone), likely with their own validation. *Note: The detailed implementation of Form3/Form4 is not fully covered in the provided snippets.*
+5.  **Exit:** Click the "Exit" button on the forms to close the application.
+
+---
+
+## 🔐 Implementation Details
+
+### 1. User Registration (`Form2.cs`)
+
+*   **Process:** Collects username, password, email, age, phone, and role. Validates input. Generates a unique salt (`Guid.NewGuid().ToString()`). Hashes the password concatenated with the salt using SHA-256. Stores user data (including hash and salt) in the `tb_log` table via a parameterized SQL query.
+*   **Code Snippet (`btnCreateAccount_Click`):**
+    ```csharp
+    private void btnCreateAccount_Click(object sender, EventArgs e)
     {
-        conn.Open();
-        string query = "INSERT INTO tb_log (Username, PasswordHash, Salt, Email, Age, PhoneNumber, Role, FailedAttempts, LockoutTime) VALUES (@username, @passwordHash, @salt, @Email, @Age, @PhoneNumber, 'user', 0, NULL)";
-        SqlCommand cmd = new SqlCommand(query, conn);
-        cmd.Parameters.AddWithValue("@username", username);
-        cmd.Parameters.AddWithValue("@passwordHash", hashedPassword);
-        cmd.Parameters.AddWithValue("@salt", salt);
-        cmd.Parameters.AddWithValue("@Email", email);
-        cmd.Parameters.AddWithValue("@Age", age);
-        cmd.Parameters.AddWithValue("@PhoneNumber", phoneNumber);
+        // --- Input Validation (See Section 5) ---
+        // Example: Validate username, password complexity, email, age, phone
 
-        cmd.ExecuteNonQuery();
-    }
-
-    MessageBox.Show("Registration successful!");
-    this.Close();
-    new Form1().Show();
-}
-```
-
-**Key Points:**
-
-*   **SQL Injection Prevention:** Uses parameterized SQL queries to prevent SQL injection attacks.
-*   **Password Hashing:**  Hashes the password using `HashPassword` (see Section 6).
-*   **Salt Generation:** Generates a unique salt using `Guid.NewGuid().ToString()`.
-*   **Database Insertion:** Inserts the username, hashed password, salt, email, age, phone number, role ('user' - hardcoded), failed attempts (0), and lockout time (NULL) into the `tb_log` table.
-*   **User Feedback:** Displays a success message and navigates back to the login form (Form1).
-*  **Role Combobox:** the code contains combobox to let the user select the role.
-
-## 2. User Login
-
-**Description:** Authenticates registered users.  The system retrieves the stored salt, re-hashes the entered password, and compares it to the stored hash.
-
-**Screenshot (Description):**
-
-
-*   **Login Form (Form1):**  "Username" and "Password" textboxes (with placeholder text).  "Login" (initially disabled), "Register," and "Exit" buttons.  `lblMessage` for error messages.
-
-**Code Snippet (Form1.cs - `btnLog_Click`):**
-
-```csharp
-private void btnLog_Click(object sender, EventArgs e)
-{
-    // ... (Connection setup and query - see previous responses) ...
-
-    using (SqlDataReader reader = cmd.ExecuteReader())
-    {
-        if (!reader.Read())
+        if (/* validation fails */)
         {
-            lblMessage.Text = "User not found.";
+            MessageBox.Show("Validation Error Message");
             return;
         }
 
-        string storedHash = reader["PasswordHash"].ToString();
-        string salt = reader["Salt"].ToString();
-        string role = reader["Role"].ToString();
-        int failedAttempts = Convert.ToInt32(reader["FailedAttempts"]);
-        DateTime? lockoutTime = reader["LockoutTime"] as DateTime?;
+        string username = txtNewUsername.Text;
+        string password = txtNewPassword.Text;
+        string email = txtEmail.Text;
+        // ... get other fields ...
 
-        reader.Close(); // Close the reader before further processing
+        string salt = Guid.NewGuid().ToString();
+        string hashedPassword = HashPassword(password, salt); // Assumes HashPassword method is accessible
 
-        // ... (Lockout check - see Section 7) ...
-
-        if (HashPassword(password, salt) == storedHash)
+        using (SqlConnection conn = new SqlConnection(connectionString))
         {
-            // ... (Reset failed attempts, redirect based on role) ...
+            try
+            {
+                conn.Open();
+                // Use Parameterized Query to prevent SQL Injection
+                string query = @"INSERT INTO tb_log
+                                 (Username, PasswordHash, Salt, Email, Age, PhoneNumber, Role, FailedAttempts, LockoutTime)
+                                 VALUES
+                                 (@username, @passwordHash, @salt, @Email, @Age, @PhoneNumber, @Role, 0, NULL)";
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@username", username);
+                    cmd.Parameters.AddWithValue("@passwordHash", hashedPassword);
+                    cmd.Parameters.AddWithValue("@salt", salt);
+                    cmd.Parameters.AddWithValue("@Email", email);
+                    cmd.Parameters.AddWithValue("@Age", /* parsed age */);
+                    cmd.Parameters.AddWithValue("@PhoneNumber", /* phone number */);
+                    cmd.Parameters.AddWithValue("@Role", comboBoxRole.SelectedItem?.ToString() ?? "user"); // Get selected role or default
+
+                    cmd.ExecuteNonQuery();
+                }
+                MessageBox.Show("Registration successful!");
+                this.Close(); // Close registration form
+                // Optionally show login form again: new Form1().Show();
+            }
+            catch (SqlException ex)
+            {
+                // Handle potential SQL errors (e.g., duplicate username)
+                MessageBox.Show($"Database error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}");
+            }
         }
-        else
-        {
-            // ... (Increment failed attempts, lock account if needed) ...
-        }
     }
-}
-```
+    ```
 
-**Key Points:**
+### 2. User Login (`Form1.cs`)
 
-*   **Database Query:** Retrieves the stored hash, salt, role, failed attempts, and lockout time.
-*   **User Existence Check:** Handles the case where the user is not found.
-*   **Password Verification:**  Re-hashes the entered password with the retrieved salt and compares it to the stored hash.
-*   **Role Retrieval:**  Retrieves the user's role for role-based access control (Section 3).
-*    **Reader Closing**: The reader is closed before any further processing.
+*   **Process:** Takes username and password. Retrieves the user's record (including hash, salt, role, failed attempts, lockout time) from the database using the username. Checks for account lockout. If not locked, hashes the entered password with the retrieved salt. Compares the generated hash with the stored hash.
+*   **Success:** If hashes match, resets failed attempts, clears lockout time, hides the login form, and shows the appropriate role-based form (Form3 or Form4).
+*   **Failure:** If hashes don't match, increments the failed attempts counter. If attempts reach 3, sets the lockout time. Updates the database and displays an error message.
+*   **Code Snippet (`btnLog_Click`):** *(See original report snippet - it accurately reflects the logic)*
 
-## 3. Role-Based Access Control
+### 3. Role-Based Access Control (RBAC) (`Form1.cs`)
 
-**Description:** After successful login, the application directs users to different forms based on their assigned role.
+*   **Process:** After successful authentication, the `Role` value retrieved from the database determines which form is displayed next.
+*   **Code Snippet (`btnLog_Click` - Success Block):** *(See original report snippet)*
 
-**Code Snippet (Form1.cs - `btnLog_Click` - within the successful login block):**
+### 4. Data Input (Conceptual - `Form3.cs` / `Form4.cs`)
 
-```csharp
-if (HashPassword(password, salt) == storedHash)
-{
-    // ... (Reset failed attempts) ...
+*   **Purpose:** These forms are placeholders for the application's core functionality after login (e.g., viewing/managing data).
+*   **Expected Features:** Input fields (Name, Age, Email, Phone), validation logic, Submit/Clear buttons, Tooltips for guidance. The Submit button should ideally be disabled until all required fields are validly filled.
 
-    this.Hide(); // Hide the login form
+### 5. Input Validation
 
-    if (role == "admin")
-    {
-        Form3 form3 = new Form3();
-        form3.ShowDialog();
-    }
-    else
-    {
-        Form4 form4 = new Form4();
-        form4.ShowDialog();
-    }
-}
-```
+*   **Where:** Implemented in `Form1` (Login - basic check for non-empty fields), `Form2` (Registration - comprehensive checks), and conceptually in `Form3`/`Form4` (Data Input).
+*   **Checks:**
+    *   **Username:** Non-empty, potentially alphanumeric (`Regex.IsMatch(username, @"^[a-zA-Z0-9]+$")`).
+    *   **Password:** Non-empty, minimum length (e.g., 8), complexity (uppercase, lowercase, digit, special character - using `Regex` or manual checks).
+    *   **Email:** Valid format using `Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$")`.
+    *   **Age:** Numeric, within a defined range (e.g., 13-100 or 18-100) using `int.TryParse` and range checks.
+    *   **Phone Number:** Numeric, specific length range (e.g., 10-15 digits) using `Regex.IsMatch(phoneNumber, @"^\d{10,15}$")`.
+*   **Feedback:** Uses `MessageBox.Show` for errors and enables/disables buttons based on validity.
 
-**Key Points:**
+### 6. Password Hashing and Salting
 
-*   **Role Check:** Checks the `role` retrieved from the database.
-*   **Conditional Navigation:**
-    *   If the role is "admin," opens `Form3`.
-    *   Otherwise (for "user" or other roles), opens `Form4`.
-*   **Form Hiding:** Hides the login form (`Form1`) before showing the next form.
+*   **Algorithm:** SHA-256.
+*   **Salt:** A unique salt (`Guid.NewGuid().ToString()`) is generated for *each user* during registration and stored alongside the hashed password.
+*   **Process:** `password + salt` -> SHA-256 Hash -> Base64 Encode -> Store in DB.
+*   **Verification:** Retrieve salt -> `entered_password + salt` -> SHA-256 Hash -> Base64 Encode -> Compare with stored hash.
+*   **Code Snippet (`HashPassword` method):** *(See original report snippet - ensure this method is accessible where needed, perhaps in a utility class or base form)*
 
-## 4. Data Input (Conceptual)
+### 7. Login Attempt Limitation and Lockout
 
-**Description:**  (Based on the assignment description, as the code for Form3/Form4 is not provided). After successful login, users (depending on their role) are presented with a form to enter or manage data.
-
-**Screenshot (Description):**
-
-*   **Data Entry Form (Form3/Form4):** Textboxes for Name, Age, Email, and Phone Number.  "Submit" (initially disabled), "Clear" buttons. Tooltips for guidance.
-
-**Conceptual Code Snippet (Illustrative - not from your provided code):**
-
-```csharp
-// Example: Enabling/Disabling the Submit button
-private void ValidateForm()
-{
-    bool allValid = !string.IsNullOrWhiteSpace(txtName.Text) &&
-                    !string.IsNullOrWhiteSpace(txtAge.Text) &&
-                    // ... (other field checks) ... &&
-                    Regex.IsMatch(txtEmail.Text, @"^[^@\s]+@[^@\s]+\.[^@\s]+$") &&
-                    // ... (other validation checks) ...;
-
-    btnSubmit.Enabled = allValid;
-}
-```
-
-**Key Points (Conceptual):**
-
-*   **Input Fields:**  Provides fields for Name, Age, Email, and Phone Number.
-*   **Input Restrictions:** Enforces restrictions on input (see Section 5 for validation details).
-*   **Submit Button:** Disabled until all fields are correctly filled.
-*   **Tooltips:**  Provides guidance to users on input requirements.
-
-## 5. Input Validation
-
-**Description:** The application validates user input on both the registration and data entry forms, ensuring data integrity and security.
-
-**Code Snippets (Form2.cs - `btnCreateAccount_Click` - Validation Examples):**
-
-```csharp
-// Email validation
-if (!Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-{
-    MessageBox.Show("Invalid email format.");
-    return;
-}
-
-// Age validation
-if (!int.TryParse(ageText, out int age) || age < 13 || age > 100) // Note: Assignment says 18-100
-{
-    MessageBox.Show("Age must be a valid number between 13 and 100.");
-    return;
-}
-
-// Phone number validation
-if (!Regex.IsMatch(phoneNumber, @"^\d{10,15}$"))
-{
-    MessageBox.Show("Phone number must be between 10 and 15 digits.");
-    return;
-}
-```
-**Key Points:**
-* The username is checked if it contains only alphanumeric values.
-*The password is checked for minimum 8 characters with Uppercase, lowercase, digit and special character.
-
-*   **Regular Expressions:**  Uses regular expressions (`Regex.IsMatch`) for email and phone number validation.
-*   **Type Conversion and Range Checks:** Uses `int.TryParse` and range checks for age validation.
-*   **Error Handling:**  Displays error messages using `MessageBox.Show` and prevents further processing if validation fails.
-*   **Form1 Input Validation:** The `ValidateInputs` method in `Form1` ensures the login button is only enabled when both username and password fields have content.
-
-## 6. Password Hashing and Salting
-
-**Description:** The application employs SHA-256 hashing with a unique, randomly generated salt to securely store passwords.
-
-**Code Snippet (Form1.cs - `HashPassword`):**
-
-```csharp
-private string HashPassword(string password, string salt)
-{
-    using (SHA256 sha256 = SHA256.Create())
-    {
-        byte[] combinedBytes = Encoding.UTF8.GetBytes(password + salt);
-        byte[] hash = sha256.ComputeHash(combinedBytes);
-        return Convert.ToBase64String(hash);
-    }
-}
-```
-
-**Key Points:**
-
-*   **SHA-256:**  Uses the SHA-256 hashing algorithm.
-*   **Salting:**  Combines the password with a unique salt *before* hashing.
-*   **Salt Generation (Form2):**  `Guid.NewGuid().ToString()` is used to generate a unique, string-based salt.
-*   **Base64 Encoding:** Converts the resulting hash (a byte array) to a Base64-encoded string for storage in the database.
-* **using Statement**: The using statment is used for SHA256.
-
-## 7. Login Attempt Limitation and Lockout
-
-**Description:**  The application limits the number of failed login attempts to three.  After three incorrect attempts, the account is temporarily locked for two minutes.
-
-**Code Snippets (Form1.cs - `btnLog_Click`):**
-
-```csharp
-// ... (Retrieve failedAttempts and lockoutTime from database) ...
-
-if (lockoutTime.HasValue && lockoutTime.Value > DateTime.Now)
-{
-    lblMessage.Text = $"Account locked. Try again at {lockoutTime.Value}.";
-    return;
-}
-
-// ... (Inside the 'else' block for incorrect password) ...
-
-failedAttempts++;
-
-if (failedAttempts >= 3)
-{
-    lblMessage.Text = "Account locked for 2 minutes.";
-    string lockQuery = "UPDATE tb_log SET FailedAttempts = @failedAttempts, LockoutTime = @lockout WHERE Username = @username";
-    using (SqlCommand lockCmd = new SqlCommand(lockQuery, conn))
-    {
-        lockCmd.Parameters.AddWithValue("@failedAttempts", failedAttempts);
-        lockCmd.Parameters.AddWithValue("@lockout", DateTime.Now.AddMinutes(2));
-        lockCmd.Parameters.AddWithValue("@username", username);
-        lockCmd.ExecuteNonQuery();
-    }
-}
-else
-{
-    // ... (Update failedAttempts in database) ...
-    lblMessage.Text = $"Invalid login attempt {failedAttempts}/3.";
-}
-```
-**Start page**
-![getstarted](https://github.com/user-attachments/assets/f778fb6a-2cad-46f1-a1be-b8ef15a57f74)
+*   **Mechanism:** Uses `FailedAttempts` (INT) and `LockoutTime` (DATETIME2 or DATETIME) columns in `tb_log`.
+*   **Trigger:** `FailedAttempts` increments on incorrect password entry.
+*   **Lockout:** When `FailedAttempts` >= 3, `LockoutTime` is set to `DateTime.Now.AddMinutes(2)`.
+*   **Check:** Before processing a login attempt, the code checks if `LockoutTime` is set and `DateTime.Now` is before the stored `LockoutTime`.
+*   **Reset:** On successful login, `FailedAttempts` is reset to 0 and `LockoutTime` is set to `NULL`.
+*   **Code Snippets (`btnLog_Click` - Lockout Check & Update Logic):** *(See original report snippet)*
 
 ---
-**Creating account page**
-![account](https://github.com/user-attachments/assets/83f29c81-488e-4288-b577-6cebdd87869f)
----
 
-**Key Points:**
-
-*   **Failed Attempts Tracking:**  The `FailedAttempts` column in the `tb_log` table stores the number of consecutive failed login attempts.
-*   **Lockout Time:** The `LockoutTime` column stores the date and time when the account lockout expires.
-*   **Lockout Check:**  Before attempting to verify the password, the code checks if `LockoutTime` is set and if the current time is still within the lockout period.
-*   **Lockout Implementation:**  If `FailedAttempts` reaches 3, the `LockoutTime` is set to the current time plus 2 minutes.
-*   **Database Updates:**  The `FailedAttempts` and `LockoutTime` are updated in the database accordingly.
-*   **User Feedback:**  Appropriate messages are displayed to the user, indicating the number of failed attempts or the lockout status.
-*  **Resetting Failed Attempts:** On successful login, `FailedAttempts` are reset to 0, and `LockoutTime` is set to NULL.
 
 

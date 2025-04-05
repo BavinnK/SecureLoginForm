@@ -67,8 +67,7 @@ private void btnCreateAccount_Click(object sender, EventArgs e)
 **Description:** Authenticates registered users.  The system retrieves the stored salt, re-hashes the entered password, and compares it to the stored hash.
 
 **Screenshot (Description):**
-![getstarted](https://github.com/user-attachments/assets/02a2e21c-3c7e-43df-8c7f-8dcb358972bc)
-![account](https://github.com/user-attachments/assets/fc9bc0a3-11a2-4307-b8e6-7747599e00fd)
+
 
 *   **Login Form (Form1):**  "Username" and "Password" textboxes (with placeholder text).  "Login" (initially disabled), "Register," and "Exit" buttons.  `lblMessage` for error messages.
 
@@ -282,6 +281,12 @@ else
     lblMessage.Text = $"Invalid login attempt {failedAttempts}/3.";
 }
 ```
+##Screen Shots##
+![getstarted](https://github.com/user-attachments/assets/f778fb6a-2cad-46f1-a1be-b8ef15a57f74)
+
+
+![account](https://github.com/user-attachments/assets/83f29c81-488e-4288-b577-6cebdd87869f)
+---
 
 **Key Points:**
 

@@ -281,11 +281,11 @@ else
     lblMessage.Text = $"Invalid login attempt {failedAttempts}/3.";
 }
 ```
-##Start page##
+##Start page
 ![getstarted](https://github.com/user-attachments/assets/f778fb6a-2cad-46f1-a1be-b8ef15a57f74)
 
 ---
-##Creating account page##
+##Creating account page
 ![account](https://github.com/user-attachments/assets/83f29c81-488e-4288-b577-6cebdd87869f)
 ---
 
